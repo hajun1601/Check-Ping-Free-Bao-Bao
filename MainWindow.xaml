@@ -1,0 +1,208 @@
+<Window x:Class="SpeedTestPro.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="NetPing Bảo Bảo ( test ) – Kiểm tra tốc độ mạng"
+        Icon="Assets/icon.ico"
+        Width="1020" Height="720" MinWidth="880" MinHeight="620"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgBrush}"
+        Foreground="{DynamicResource TextBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="15"
+        Loaded="Window_Loaded" Closing="Window_Closing"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="28">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Đầu trang -->
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="60" Height="60" CornerRadius="30" Margin="0,0,16,0"
+                            BorderThickness="2" BorderBrush="{DynamicResource AccentBrush}"
+                            AutomationProperties.Name="Logo NetPing Bảo Bảo ( test )">
+                        <Border.Background>
+                            <ImageBrush ImageSource="Assets/icon.png" Stretch="UniformToFill"/>
+                        </Border.Background>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="NetPing Bảo Bảo ( test )" FontSize="30" FontWeight="Bold"
+                                   AutomationProperties.HeadingLevel="Level1"/>
+                        <TextBlock Text="Đo ping, tốc độ tải xuống, tải lên và xem vị trí mạng của bạn"
+                                   Style="{StaticResource Label}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="CopyButton" Content="Sao chép kết quả" Style="{StaticResource GhostButton}"
+                            Margin="0,0,10,0" IsEnabled="False" Click="CopyButton_Click"
+                            AutomationProperties.Name="Sao chép kết quả đo vào bộ nhớ tạm"/>
+                    <Button Content="Mở file lịch sử" Style="{StaticResource GhostButton}"
+                            Margin="0,0,10,0" Click="OpenHistory_Click"
+                            AutomationProperties.Name="Mở file CSV lịch sử các lần đo"/>
+                    <Button Content="Đổi giao diện (Ctrl+T)" Style="{StaticResource GhostButton}"
+                            Click="ThemeButton_Click"
+                            AutomationProperties.Name="Chuyển giữa giao diện sáng và tối"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Nội dung chính -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="400"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Đồng hồ tốc độ -->
+                <Border Style="{StaticResource Card}" Margin="0,0,10,0">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Grid Width="300" Height="250">
+                            <Canvas Width="300" Height="250">
+                                <Path x:Name="GaugeTrack" Stroke="{DynamicResource TrackBrush}" StrokeThickness="18"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <Path x:Name="GaugeValue" Stroke="{DynamicResource AccentBrush}" StrokeThickness="18"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <TextBlock Text="0" Style="{StaticResource Label}" Canvas.Left="38" Canvas.Top="228"/>
+                                <TextBlock Text="1 Gbps" Style="{StaticResource Label}" Canvas.Left="226" Canvas.Top="228"/>
+                            </Canvas>
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,10,0,0">
+                                <TextBlock x:Name="SpeedText" Text="0.0" FontSize="60" FontWeight="Bold"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="Mbps" Style="{StaticResource Label}" FontSize="18"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock x:Name="PhaseText" Text="Sẵn sàng" FontSize="16" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                        <Button x:Name="StartButton" Content="Bắt đầu đo" Style="{StaticResource PrimaryButton}"
+                                Margin="0,16,0,0" Click="StartButton_Click"
+                                AutomationProperties.Name="Bắt đầu hoặc dừng bài đo tốc độ mạng"/>
+                        <TextBlock Text="Thang đo thay đổi theo logarit" Style="{StaticResource Label}"
+                                   FontSize="12" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Kết quả + thông tin -->
+                <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                    <UniformGrid Columns="2">
+                        <Border Style="{StaticResource Card}" Margin="0,0,8,16">
+                            <StackPanel>
+                                <TextBlock Text="Ping (độ trễ)" Style="{StaticResource Label}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Name="PingText" Text="—" Style="{StaticResource Value}"/>
+                                    <TextBlock Text="ms" Style="{StaticResource Unit}"/>
+                                </StackPanel>
+                                <TextBlock x:Name="PingQuality" Text="Chưa đo" Style="{StaticResource Label}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}" Margin="8,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Jitter (độ dao động)" Style="{StaticResource Label}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Name="JitterText" Text="—" Style="{StaticResource Value}"/>
+                                    <TextBlock Text="ms" Style="{StaticResource Unit}"/>
+                                </StackPanel>
+                                <TextBlock x:Name="LossText" Text="Mất gói: —" Style="{StaticResource Label}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}" Margin="0,0,8,16">
+                            <StackPanel>
+                                <TextBlock Text="Tải xuống" Style="{StaticResource Label}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Name="DownloadText" Text="—" Style="{StaticResource Value}"/>
+                                    <TextBlock Text="Mbps" Style="{StaticResource Unit}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}" Margin="8,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Tải lên" Style="{StaticResource Label}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Name="UploadText" Text="—" Style="{StaticResource Value}"/>
+                                    <TextBlock Text="Mbps" Style="{StaticResource Unit}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Đo đạc chi tiết" FontSize="18" FontWeight="Bold"
+                                       Margin="0,0,0,14" AutomationProperties.HeadingLevel="Level2"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Text="Ping thấp / cao nhất" Style="{StaticResource InfoLabel}" MinWidth="170"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="MinMaxText" Text="—" Style="{StaticResource InfoValue}"/>
+
+                                <TextBlock Grid.Row="1" Text="Thời gian phân giải DNS" Style="{StaticResource InfoLabel}" MinWidth="170"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DnsText" Text="—" Style="{StaticResource InfoValue}"/>
+
+                                <TextBlock Grid.Row="2" Text="Ping Cloudflare (1.1.1.1)" Style="{StaticResource InfoLabel}" MinWidth="170"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="HostCfText" Text="—" Style="{StaticResource InfoValue}"/>
+
+                                <TextBlock Grid.Row="3" Text="Ping Google (8.8.8.8)" Style="{StaticResource InfoLabel}" MinWidth="170"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="HostGgText" Text="—" Style="{StaticResource InfoValue}"/>
+
+                                <TextBlock Grid.Row="4" Text="Ping Quad9 (9.9.9.9)" Style="{StaticResource InfoLabel}" MinWidth="170" Margin="0,0,16,0"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" x:Name="HostQ9Text" Text="—" Style="{StaticResource InfoValue}" Margin="0"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Thông tin mạng &amp; vị trí" FontSize="18" FontWeight="Bold"
+                                       Margin="0,0,0,14" AutomationProperties.HeadingLevel="Level2"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Text="Địa chỉ IP" Style="{StaticResource InfoLabel}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="IpText" Text="Đang tải..." Style="{StaticResource InfoValue}"/>
+
+                                <TextBlock Grid.Row="1" Text="Vị trí (ước tính)" Style="{StaticResource InfoLabel}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="LocationText" Text="Đang tải..." Style="{StaticResource InfoValue}"/>
+
+                                <TextBlock Grid.Row="2" Text="Nhà mạng (ISP)" Style="{StaticResource InfoLabel}"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="IspText" Text="Đang tải..." Style="{StaticResource InfoValue}"/>
+
+                                <TextBlock Grid.Row="3" Text="Kết nối" Style="{StaticResource InfoLabel}"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="AdapterText" Text="Đang tải..." Style="{StaticResource InfoValue}"/>
+
+                                <TextBlock Grid.Row="4" Text="Máy chủ đo" Style="{StaticResource InfoLabel}" Margin="0,0,16,0"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" x:Name="ServerText" Text="Đang tải..." Style="{StaticResource InfoValue}" Margin="0"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- Thanh trạng thái (trình đọc màn hình sẽ đọc khi thay đổi) -->
+            <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,20,0,0" Padding="16,12">
+                <TextBlock x:Name="StatusText" Text="Nhấn “Bắt đầu đo” để bắt đầu." FontSize="15"
+                           AutomationProperties.LiveSetting="Polite"
+                           AutomationProperties.Name="Trạng thái"/>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</Window>
